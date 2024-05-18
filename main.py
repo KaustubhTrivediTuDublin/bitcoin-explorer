@@ -198,13 +198,6 @@ def request_detailed_info(s, inventory_vectors):
     s.send(getdata_message)
 
 
-def handle_block_payload(payload):
-    # Parse and process the block payload
-    # This is where you should handle the received block
-    print(payload)
-    pass
-
-
 def create_message(command, length, checksum, payload):
     return command + length + checksum + payload
 
@@ -214,15 +207,18 @@ def listen_for_events(s):
         # Continuously listen for incoming events (inv payloads)
         message = recv_message(s)
         if message:
+            print("")
             print("Received message...")
             message_header = parse_header(message)
             print("Message Header")
+            print("-----------------")
             print(message_header)
             if message_header['command'] == 'inv':
                 handle_inv_payload(message, s)
-                extract_transaction_and_block_hashes(message)
-            elif message_header['command'] == 'block':
-                handle_block_payload(message)
+                block_hash = extract_block_hash_from_inv(message)
+                get_block_info(block_hash)
+            else:
+                print("Unhandled message type")
 
 
 def parse_inv_message(message):
@@ -268,26 +264,51 @@ def parse_inv_message(message):
         return None
 
 
-def extract_transaction_and_block_hashes(inv_message):
+def extract_block_hash_from_inv(inv_message):
     parsed_inv = parse_inv_message(inv_message)
     if parsed_inv and parsed_inv['command'] == 'inv':
-        # Inventory type 2 represents transactions
-        transaction_hashes = [
-            inv[1].hex() for inv in parsed_inv['inventory_vectors'] if inv[0] == 2]
-        # Inventory type 1 represents blocks
-        block_hashes = [inv[1].hex()
-                        for inv in parsed_inv['inventory_vectors'] if inv[0] == 1]
-        return {
-            'transaction_hashes': transaction_hashes,
-            'block_hashes': block_hashes
-        }
+        for inv in parsed_inv['inventory_vectors']:
+            if inv[0] == 1:  # Inventory type 1 represents blocks
+                # Return the hash of the first block encountered
+                return inv[1].hex()
+        # If no block hashes are found
+        print("No block hashes found in the 'inv' message.")
+        return None
     else:
-        return {
-            'transaction_hashes': [],
-            'block_hashes': []
-        }
+        return None
 
 
+def get_block_info(block_hash):
+    try:
+        print("Fetching block information...")
+        response = requests.get(
+            f"https://blockchain.info/rawblock/{block_hash}")
+        if response.status_code == 200:
+            block_data = response.json()
+            print_block_data(block_data)
+        else:
+            print(
+                f"Error retrieving block information. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error retrieving block information: {e}")
+        return None
+
+
+def print_block_data(block_data):
+    print("************************************")
+    print("Block Data")
+    print("------------------------------------")
+    print(f"Block Hash: {block_data['hash']}")
+    print(f"Previous Block: {block_data['prev_block']}")
+    print(f"Nonce: {block_data['nonce']}")
+    print(f"Height: {block_data['height']}")
+    print(f"Main Chain: {block_data['main_chain']}")
+    date_time = datetime.datetime.fromtimestamp(block_data['time'])
+    formatted_date = date_time.strftime("%A, %B %d, %Y - %H:%M:%S ")
+    print(
+        f"Mined At: {formatted_date}")
+    print("************************************")
 
 
 def main():

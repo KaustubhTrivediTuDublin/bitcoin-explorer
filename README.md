@@ -1,85 +1,85 @@
-## Bitcoin Node Communication README
+# Bitcoin Explorer
 
-### Introduction
+This code is a Python script designed to interact with a Bitcoin node, adhering to the Bitcoin network protocol. It performs several key actions: connecting to a node, sending version and acknowledgment messages, receiving messages from the node, and handling inventory messages to request detailed block information. Here's a breakdown of the code:
 
-This code provides functionality to communicate with a Bitcoin node using the Bitcoin protocol. It allows sending and receiving various types of messages, such as version messages, verack messages, inventory (inv) payloads, and block payloads.
+## 1. Imports
 
-### Functionality
+The script imports several standard Python libraries:
 
-1. **create_version_message():**
+- `socket`: for network communication.
+- `struct`: for packing and unpacking binary data.
+- `time`: for timestamps.
+- `hashlib`: for creating checksums.
+- `requests`: for making HTTP requests.
+- `datetime`: for handling date and time.
 
-   - Generates a version message according to the Bitcoin protocol specifications.
+## 2. Creating the Version Message
 
-2. **connect_to_node():**
+The `create_version_message` function constructs a version message according to the Bitcoin protocol. The version message includes various fields like version number, services, timestamp, and addresses.
 
-   - Establishes a TCP connection to a Bitcoin node.
+- **Packing Data**: Data is packed using the `struct` library to conform to the protocol's binary format.
+- **Checksum**: A checksum is calculated using double SHA-256 hashing.
+- **Message Construction**: The message is constructed by concatenating the magic number, command, payload length, checksum, and payload.
 
-3. **recv_message(s):**
+## 3. Connecting to a Node
 
-   - Receives a message from the connected Bitcoin node.
+The `connect_to_node` function creates a TCP connection to a Bitcoin node (in this case, `seed.bitcoin.sipa.be` on port `8333`).
 
-4. **send_verack(s):**
+- **Socket Connection**: Establishes a connection using the `socket` library.
+- **Sending Version Message**: Sends the version message to the node.
 
-   - Sends a verack message to acknowledge the version message received from the node.
+## 4. Receiving Messages
 
-5. **parse_header(data):**
+The `recv_message` function receives a message from the connected node. It reads up to 1024 bytes of data.
 
-   - Parses the header of a Bitcoin message and extracts relevant information such as magic number, command, length, checksum, and payload.
+## 5. Sending Verack Message
 
-6. **parse_version_payload(payload):**
+The `send_verack` function constructs and sends a "verack" message to acknowledge the receipt of the version message.
 
-   - Parses the payload of a version message and extracts information such as version, services, timestamp, addresses, nonce, user agent, start height, and relay flag.
+## 6. Parsing Headers and Payloads
 
-7. **parse_addr(addr):**
+Several functions parse the headers and payloads of messages:
 
-   - Parses a network address and extracts information such as services, IP address, and port.
+- **`parse_header`**: Extracts and decodes the header components.
+- **`parse_version_payload`**: Decodes the payload of a version message.
+- **`parse_addr`**: Parses address fields from the payload.
 
-8. **send_version_payload(s):**
+## 7. Handling Inventory Messages
 
-   - Sends the version message to the connected Bitcoin node.
+- **`handle_inv_payload`**: Extracts inventory vectors from an "inv" message and requests detailed information for each.
+- **`request_detailed_info`**: Constructs and sends a "getdata" message to request detailed block information.
+- **`parse_inv_message`**: Parses an "inv" message to extract inventory vectors.
+- **`extract_block_hash_from_inv`**: Extracts block hashes from an inventory message.
 
-9. **handle_inv_payload(payload, s):**
+## 8. Fetching and Printing Block Information
 
-   - Handles the inventory (inv) payload received from the node by extracting inventory vectors and requesting detailed information for each vector using getdata payload.
+- **`get_block_info`**: Uses the `requests` library to fetch block information from a public blockchain API.
+- **`print_block_data`**: Prints detailed block information in a formatted manner.
 
-10. **request_detailed_info(s, inventory_vectors):**
+## 9. Listening for Events
 
-    - Constructs and sends a getdata payload to request detailed information for inventory vectors.
+The `listen_for_events` function continuously listens for incoming messages, handles "inv" messages, and fetches block information.
 
-11. **handle_block_payload(payload):**
+## 10. Main Function
 
-    - Placeholder function to handle block payloads received from the node. Currently, it only prints the payload.
+The `main` function coordinates the script's flow:
 
-12. **create_message(command, length, checksum, payload):**
+- Connects to the node.
+- Sends the version payload.
+- Sends the verack message.
+- Listens for events.
 
-    - Creates a Bitcoin message by combining the command, length, checksum, and payload.
+## 11. Entry Point
 
-13. **listen_for_events(s):**
+The `if __name__ == "__main__":` block ensures the `main` function is called when the script is run directly.
 
-    - Continuously listens for incoming events (inv payloads) from the Bitcoin node and handles them accordingly.
+## Example Execution Flow
 
-14. **parse_inv_message(message):**
+1. **Connect to Node**: Establish a connection to a Bitcoin node.
+2. **Send Version Message**: Notify the node of the client's version.
+3. **Receive Messages**: Wait for responses from the node.
+4. **Send Verack**: Acknowledge the version message.
+5. **Handle Inventory Messages**: Request detailed block information from inventory messages.
+6. **Fetch and Print Block Data**: Retrieve and display block information from a public API.
 
-    - Parses the 'inv' message received from the node and extracts information such as magic number, command, payload length, checksum, and inventory vectors.
-
-15. **main():**
-    - Entry point of the program.
-    - Establishes connection to the Bitcoin node.
-    - Sends version payload and verack response.
-    - Listens for events (inv payloads) from the node.
-
-### Usage
-
-To use this code:
-
-1. Ensure you have Python installed.
-2. Modify the `main()` function if necessary, and run the script.
-3. The script will establish a connection to a Bitcoin node, send version message, send verack response, and then listen for events (inv payloads) from the node.
-
-### Dependencies
-
-- This code relies on Python's built-in `socket`, `struct`, `time`, and `hashlib` modules for socket communication, struct packing/unpacking, timestamp generation, and checksum calculation, respectively.
-
-### Note
-
-This code provides a basic framework for interacting with a Bitcoin node using the Bitcoin protocol. Depending on your use case, you may need to extend or modify the functionality to suit your requirements, especially in handling different types of messages and payloads.
+This script demonstrates basic interaction with the Bitcoin protocol, handling version negotiation, acknowledgment, and inventory message processing to fetch detailed block data from a Bitcoin node.

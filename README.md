@@ -1,7 +1,11 @@
 # Bitcoin Explorer
 
-This code is a Python script designed to interact with a Bitcoin node, adhering to the Bitcoin network protocol. It performs several key actions: connecting to a node, sending version and acknowledgment messages, receiving messages from the node, and handling inventory messages to request detailed block information. Here's a breakdown of the code:
-
+This code is a Python script designed to interact with a Bitcoin node, adhering to the Bitcoin network protocol. It performs several key actions: connecting to a node, sending version and acknowledgment messages, receiving messages from the node, and handling inventory messages to request detailed block information.
+Run this code:
+```bash
+python main.py
+```
+Here's a breakdown of the code:
 ## 1. Imports
 
 The script imports several standard Python libraries:
